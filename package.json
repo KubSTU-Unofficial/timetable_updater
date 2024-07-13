@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "eslint": "^9.6.0",
+    "https": "^1.0.0",
+    "mongoose": "^8.5.0",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.5.3"
+  },
+  "type": "module",
+  "name": "timetable_updater",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "scripts": {
+    "update": "node --env-file=.env .",
+    "update:force": "node --env-file=.env . --force"
+  },
+  "author": "Electroplayer",
+  "license": "ISC",
+  "description": "Just timetable update instrument",
+  "devDependencies": {
+    "@types/node": "^20.14.10"
+  }
+}

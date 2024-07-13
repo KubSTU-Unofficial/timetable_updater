@@ -1,8 +1,3 @@
-/*
---force     Удалить старые расписания
---debug     Показывать больше информации
-*/
-
 import APIConvertor from "./shared/lib/APIConvertor.js";
 import ScheduleModel from "./shared/models/ScheduleModel.js";
 import TeacherScheduleModel from "./shared/models/TeacherScheduleModel.js";

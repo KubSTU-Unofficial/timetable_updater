@@ -4,6 +4,25 @@ import TeacherScheduleModel from './shared/models/TeacherScheduleModel.js';
 import { default as Group } from './shared/structures/Group.js';
 import mongoose from 'mongoose';
 
+interface ITeacherLesson {
+    group: string;
+    number: number;
+    time: string;
+    name: string;
+    paraType: string;
+    auditory: string;
+    remark?: string;
+    percent?: string;
+    period?: string;
+    flow?: boolean;
+}
+
+interface ITeacherDay {
+    daynum: number;
+    even: boolean;
+    daySchedule: ITeacherLesson[];
+}
+
 mongoose.set('strictQuery', true);
 mongoose.connect(process.env.MONGO_URI).then(() => {
     new (class Main {

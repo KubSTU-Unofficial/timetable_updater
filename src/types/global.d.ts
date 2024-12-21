@@ -7,7 +7,7 @@ declare global {
         }
     }
 
-    // Они не определяются в index.ts, но тк они и не используются, это неважно
+    // Они не всегда определяются в index.ts, но тк они и не используются, это неважно
     interface Date {
         getWeek(): number;
         stringDate(): string;

@@ -103,12 +103,13 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
                 groups.map((group) =>
                     (async function () {
                         let schedule = await APIConvertor.ofo(group.name, ugod, sem);
+                        let lessonStartDate = await APIConvertor.parseCalendar(group.name, sem, ugod);
 
                         if (!schedule || !schedule.isok) return console.log(`[updater] [-] Не удалось для ${group.name}`);
 
                         bulk.find({ group: group.name, inst_id: group.inst_id })
                             .upsert()
-                            .updateOne({ $set: { data: schedule.data, updateDate: now } });
+                            .updateOne({ $set: { data: schedule.data, lessonStartDate, updateDate: now } });
 
                         console.log(`[updater] [+] ${group.name}`);
                     })(),
@@ -168,14 +169,15 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
             let teachersSchedule: { [key: string]: ITeacherDay[] } = {}; // Тут будут храниться расписания у преподавателей
             let updateDate = new Date(); // Дата обновления (сейчас)
 
-            let mondayDate = this.getMonday(new Date()); // Получаем текущей недели
+            let mondayDate = this.getMonday(new Date()); // Получаем понедельник текущей недели
             let endDate = new Date(mondayDate); // Конечная дата
             endDate.setDate(mondayDate.getDate() + 13);
 
-            let weekNum = weekNumber(mondayDate); // Номер текущий недели
-
             oSchedules.forEach((group) => {
                 if (!group.data || group.data.length == 0) return; // Если у группы нет пар, значит пропускаем её
+                if (!group.lessonsStartDate) return; // Не получится чётко установить положение группы, если у меня не будет начальной даты
+
+                let weekNum = weekNumber(group.lessonsStartDate, mondayDate); // Номер текущий недели
 
                 group.data.forEach((lesson) => {
                     if (lesson.teacher == 'Не назначен') return;
@@ -187,7 +189,7 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
                     let out: ITeacherLesson = {
                         group: group.group,
                         number: lesson.pair!,
-                        time: Group.lessonsTime[lesson.pair!]!,
+                        time: `${Group.lessonsTime[lesson.pair!][0]} - ${Group.lessonsTime[lesson.pair!][1]}`,
                         name: lesson.disc?.disc_name!,
                         paraType: Group.lessonsTypes[lesson.kindofnagr?.kindofnagr_name!]!,
                         auditory: lesson.classroom!,
@@ -236,7 +238,7 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
                     let out: ITeacherLesson = {
                         group: group.group,
                         number: lesson.pair!,
-                        time: Group.lessonsTime[lesson.pair!]!,
+                        time: `${Group.lessonsTime[lesson.pair!][0]} - ${Group.lessonsTime[lesson.pair!][1]}`,
                         name: lesson.disc?.disc_name!,
                         paraType: Group.lessonsTypes[lesson.kindofnagr?.kindofnagr_name!]!,
                         auditory: lesson.classroom!,
@@ -265,8 +267,8 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
             let teacherNames = Object.keys(teachersSchedule);
             let absentTeachers = teachersScheduleDB.map((elm) => elm.name).filter((elm) => !teacherNames.includes(elm));
 
-            // Удаляем тех, кого нет
-            if (absentTeachers.length) bulk.find({ name: { $in: absentTeachers } }).delete();
+            // Очищаем их расписание
+            if (absentTeachers.length) bulk.find({ name: { $in: absentTeachers } }).update({ $set: { data: [], updateDate } });
 
             for (let teacher in teachersSchedule) {
                 // Сортируем по дням недели

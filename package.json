@@ -4,6 +4,7 @@
     "https": "^1.0.0",
     "mongoose": "^8.5.0",
     "node-fetch": "^3.3.2",
+    "node-html-parser": "^7.0.1",
     "typescript": "^5.5.3"
   },
   "type": "module",

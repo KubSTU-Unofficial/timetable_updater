@@ -103,13 +103,13 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
                 groups.map((group) =>
                     (async function () {
                         let schedule = await APIConvertor.ofo(group.name, ugod, sem);
-                        let lessonStartDate = await APIConvertor.parseCalendar(group.name, sem, ugod);
+                        let lessonsStartDate = await APIConvertor.parseCalendar(group.name, sem, ugod);
 
                         if (!schedule || !schedule.isok) return console.log(`[updater] [-] Не удалось для ${group.name}`);
 
                         bulk.find({ group: group.name, inst_id: group.inst_id })
                             .upsert()
-                            .updateOne({ $set: { data: schedule.data, lessonStartDate, updateDate: now } });
+                            .updateOne({ $set: { data: schedule.data, lessonsStartDate, updateDate: now } });
 
                         console.log(`[updater] [+] ${group.name}`);
                     })(),

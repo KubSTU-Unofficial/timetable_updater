@@ -5,7 +5,7 @@ import LessonModel, { ILessonSchema } from './shared/models/LessonModel.js';
 // Сделано для определения чётности недели
 // Returns the ISO week of the date.
 // Source: https://weeknumber.net/how-to/javascript
-Date.prototype.getWeek = function () {
+Date.prototype.getWeek = function() {
     let date = new Date(this.getTime());
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
@@ -21,7 +21,7 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
             console.log(process.argv);
 
-            if (process.argv.includes('--force'))
+            if(process.argv.includes('--force'))
                 p = p.then(() => {
                     return this.removeAllData();
                 });
@@ -29,12 +29,12 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
             p.then(() => {
                 return this.updateOfoSchedules();
             })
-                .then(() => {
-                    return this.updateZfoSchedules();
-                })
-                .then(() => {
-                    return mongoose.disconnect();
-                });
+            .then(() => {
+                return this.updateZfoSchedules();
+            })
+            .then(() => {
+                return mongoose.disconnect();
+            });
         }
 
         async removeAllData() {
@@ -52,9 +52,9 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
             let resp = await APIConvertor.groupsList(ugod, { foe: 'ofo' });
 
-            if (process.argv.includes('--debug')) console.log(`[updater] Ответ:`, resp);
+            if(process.argv.includes('--debug')) console.log(`[updater] Ответ:`, resp);
 
-            if (!resp || !resp.isok) return console.log('[updater] Ошибка!', resp?.error_message);
+            if(!resp || !resp.isok) return console.log('[updater] Ошибка!', resp?.error_message);
 
             let groups = resp.data.map((g) => ({ name: g.name, inst_id: g.inst_id }));
             const results = await Promise.allSettled(groups.map(async (group) => {
@@ -62,13 +62,13 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
                     let schedule = await APIConvertor.ofo(group.name, ugod, sem);
                     let lessonsStartDate = await APIConvertor.parseCalendar(group.name, sem, ugod);
 
-                    if (!schedule || !schedule.isok) {
+                    if(!schedule || !schedule.isok) {
                         console.log(`[updater] [-] Не удалось для ${group.name}`);
                         return [];
                     }
 
                     let lessons: ILessonSchema[] = schedule.data.map((l) => {
-                        if ('nedType' in l.day && lessonsStartDate)
+                        if('nedType' in l.day && lessonsStartDate)
                             l.day.weeks.startDate = new Date(lessonsStartDate.valueOf() + 1000 * 60 * 60 * 24 * 7 * (l.day.weeks.from - 1));
 
                         return { ...l, group: group.name };
@@ -76,15 +76,15 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
                     console.log(`[updater] [+] ${group.name}`);
                     return lessons;
-                } catch (e) {
+                } catch(e) {
                     console.log(`[updater] [!] Ошибка для ${group.name}:`, e);
                     return [];
                 }
             }));
 
             let result: ILessonSchema[] = results
-                .filter(r => r.status === 'fulfilled')
-                .flatMap(r => (r as PromiseFulfilledResult<ILessonSchema[]>).value);
+            .filter(r => r.status === 'fulfilled')
+            .flatMap(r => (r as PromiseFulfilledResult<ILessonSchema[]>).value);
 
             await LessonModel.insertMany(result).catch(console.error);
         }
@@ -99,16 +99,16 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
             let resp = await APIConvertor.groupsList(ugod, { foe: 'zfo' });
 
-            if (process.argv.includes('--debug')) console.log(`[updater] Ответ:`, resp);
+            if(process.argv.includes('--debug')) console.log(`[updater] Ответ:`, resp);
 
-            if (!resp || !resp.isok) return console.log('[updater] Ошибка!', resp?.error_message);
+            if(!resp || !resp.isok) return console.log('[updater] Ошибка!', resp?.error_message);
 
             let groups = resp.data.map((g) => ({ name: g.name, inst_id: g.inst_id }));
             const results = await Promise.allSettled(groups.map(async (group) => {
                 try {
                     let schedule = await APIConvertor.zfo(group.name, ugod, sem);
 
-                    if (!schedule || !schedule.isok) {
+                    if(!schedule || !schedule.isok) {
                         console.log(`[updater] [-] Не удалось для ${group.name}`);
                         return [];
                     }
@@ -119,15 +119,15 @@ mongoose.connect(process.env.MONGO_URI).then(() => {
 
                     console.log(`[updater] [+] ${group.name}`);
                     return lessons;
-                } catch (e) {
+                } catch(e) {
                     console.log(`[updater] [!] Ошибка для ${group.name}:`, e);
                     return [];
                 }
             }));
 
             let result: ILessonSchema[] = results
-                .filter(r => r.status === 'fulfilled')
-                .flatMap(r => (r as PromiseFulfilledResult<ILessonSchema[]>).value);
+            .filter(r => r.status === 'fulfilled')
+            .flatMap(r => (r as PromiseFulfilledResult<ILessonSchema[]>).value);
 
             await LessonModel.insertMany(result).catch(console.error);
         }
